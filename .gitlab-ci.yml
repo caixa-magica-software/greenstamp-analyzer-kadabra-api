@@ -1,0 +1,17 @@
+image: docker
+
+services:
+  - docker:dind
+
+stages:
+  - deploy
+
+production:
+  stage: deploy
+  only:
+    refs:
+      - main
+  script:
+    - echo setting up env $NODE_ENV
+    - docker-compose build
+    - docker-compose up -d --force-recreate
