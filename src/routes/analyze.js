@@ -25,7 +25,8 @@ router.post('/', upload.single("binary"), (req, res) => {
   console.log("Analyzing file:", req.file)
   console.log("Parameters received:", req.body.app)
   const app = JSON.parse(req.body.app)
-  const { appName, packageName, version, url, metadata, tests } = app
+  const { appName, packageName, version, tests } = app
+  const { url, metadata } = app.data
   if(appName == null || appName == "") res.send(400).send({ message: "appName name cannot be null or empty" });
   else if(packageName == null || packageName == "") res.send(400).send({ message: "packageName name cannot be null or empty" });
   else if(version != null && version == "") res.send(400).send({ message: "version name cannot be null or empty" });
