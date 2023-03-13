@@ -35,7 +35,7 @@ router.post('/', upload.single("binary"), (req, res) => {
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
     if(req.file != null) {
-      execute(result.resultsPath, results.apkPath, appName, packageName, version, url, metadata, tests)
+      execute(req.file.destination, req.file.path, appName, packageName, version, url, metadata, tests)
       res.status(200).send()
     } else {
       downloadApk(url)
