@@ -38,7 +38,7 @@ router.post('/', upload.single("binary"), (req, res) => {
       execute(result.resultsPath, results.apkPath, appName, packageName, version, url, metadata, tests)
       res.status(200).send()
     } else {
-      downloadApk(app.url)
+      downloadApk(url)
         .then(result => {
           execute(result.resultsPath, result.apkPath, appName, packageName, version, url, metadata, tests)
           res.status(200).send()
@@ -56,6 +56,7 @@ const downloadApk = (url) => {
     fs.mkdirSync(resultsPath, { recursive: true })
     const fileName = `${ts}.apk`
     const output = fs.createWriteStream(`${resultsPath}/${fileName}`)
+    console.log("Going to download from:", url)
     console.log("Going to download on:", `${resultsPath}/${fileName}`)
     https.get(url, (res) => {
       console.log('apk download status code:', res.statusCode);
