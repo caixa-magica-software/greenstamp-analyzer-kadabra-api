@@ -13,5 +13,7 @@ services:
       - 3333:3000
     environment:
       DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
+      KADABRA_HOME: ${KADABRA_HOME}
+      UPLOADS_HOME: ${UPLOADS_HOME}
     volumes:
       - '/data/greenstamp/analyzer-kadabra-api:/data'

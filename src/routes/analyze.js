@@ -6,8 +6,11 @@ const fs = require('fs');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    fs.mkdirSync('/data/uploads', { recursive: true })
-    cb(null, '/data/uploads')
+    const resultsDir = process.env.RESULTS_HOME || "./data/uploads"
+    const resultsPath = `${resultsDir}/${Date.now()}`
+    console.log("Upload on", resultsPath)
+    fs.mkdirSync(resultsPath, { recursive: true })
+    cb(null, resultsPath)
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname)
@@ -28,13 +31,14 @@ router.post('/', upload.single("binary"), (req, res) => {
   else if(metadata != null && metadata == "") res.send(400).send({ message: "metadata name cannot be null or empty" });
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
-    execute(req.file.filename, appName, packageName, version, url, metadata, tests)
+    execute(req.file.destination, req.file.path, appName, packageName, version, url, metadata, tests)
     res.status(200).send()
   }
 })
 
-const execute = (apkFileName, appName, packageName, version, url, metadata, tests) => {
-  doTests(apkFileName, tests)
+const execute = (resultsPath, apkPath, appName, packageName, version, url, metadata, tests) => {
+  const resultsEndpoint = process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result"
+  doTests(resultsPath, apkPath, tests)
     .then(results => {
       const testResponse = {
         appName: appName,
@@ -44,39 +48,43 @@ const execute = (apkFileName, appName, packageName, version, url, metadata, test
         results: results
       }
       console.log("Sending test response...", testResponse)
-      axios.put(process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result", testResponse)
+      axios.put(resultsEndpoint, testResponse)
     })
     .catch(error => console.log("ERROR:", error))
 }
 
-const doTests = (apkFileName, tests) => {
+const doTests = (resultsPath, apkPath, tests) => {
   return new Promise((resolve, reject) => {
-    exec(`java -jar /data/kadabra/kadabra.jar /data/kadabra/main.js -p /data/uploads/${apkFileName} -WC -APF package! -o output -s -X -C`, (error, stdout, stderr) => {
+    const kadabraHome = process.env.KADABRA_HOME
+    exec(`cd ${resultsPath} && java -jar ${kadabraHome}/kadabra.jar ${kadabraHome}/main.js -p ${apkPath} -WC -APF package! -o output -s -X -C`, (error, stdout, stderr) => {
       if(error) console.log("error:", error)
       if(stdout) console.log("stdout:", stdout)
       if(stderr) console.log("stderr:", stderr)
-      fs.readFile('results.json', (err, data) => {
+      // Some of apks return error but still creates the results.json file
+      fs.readFile(`${resultsPath}/results.json`, (err, data) => {
         if (err) reject(err);
-        const results = JSON.parse(data);
-        const testResults = tests.map(test => {
-          const result = Object.keys(results.detectors).find(detector => detector == test.name)
-          return {
-            name: test.name,
-            parameters: test.parameters,
-            result: result ? result.length : "NA",
-            unit: "warnings"
-          }
-        })
-        console.log("Results for:", apkFileName)
-        console.log(testResults)
-        // This analyzer does not support arguments to define which analyzers should be used dynamically
-        console.log("Should filter for...")
-        const testNames = tests.map(test => test.name)
-        console.log(testNames)
-        console.log("After filtering")
-        const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) <= 0)
-        console.log("Filtered test results:", filteredTests)
-        resolve(filteredTests)
+        else {
+          const results = JSON.parse(data);
+          const testResults = tests.map(test => {
+            const result = Object.keys(results.detectors).find(detector => detector == test.name)
+            return {
+              name: test.name,
+              parameters: test.parameters,
+              result: result ? results.detectors[result].length : "NA",
+              unit: "warnings"
+            }
+          })
+          console.log("Results for:", apkPath)
+          console.log(testResults)
+          // This analyzer does not support arguments to define which analyzers should be used dynamically
+          console.log("Should filter for...")
+          const testNames = tests.map(test => test.name)
+          console.log(testNames)
+          console.log("After filtering")
+          const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) <= 0)
+          console.log("Filtered test results:", filteredTests)
+          resolve(filteredTests)
+        }
       })
     })
   })
