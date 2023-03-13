@@ -61,6 +61,7 @@ const downloadApk = (url) => {
       res.pipe(output);
       resolve({ resultsPath: resultsPath, apkPath: `${resultsPath}/${fileName}`})
     }).on('error', (error) => {
+      console.log("Error during downlad:", error)
       reject(error)
     });
   })
