@@ -3,10 +3,12 @@ const router = require('express').Router()
 const multer = require('multer')
 const { exec } = require("child_process");
 const fs = require('fs');
+const https = require('https');
+
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const resultsDir = process.env.RESULTS_HOME || "./data/uploads"
+    const resultsDir = process.env.UPLOADS_HOME || "./data/uploads"
     const resultsPath = `${resultsDir}/${Date.now()}`
     console.log("Upload on", resultsPath)
     fs.mkdirSync(resultsPath, { recursive: true })
@@ -31,12 +33,41 @@ router.post('/', upload.single("binary"), (req, res) => {
   else if(metadata != null && metadata == "") res.send(400).send({ message: "metadata name cannot be null or empty" });
   else if(tests != null && tests.length == 0) res.send(400).send({ message: "tests name cannot be null or empty" });
   else {
-    execute(req.file.destination, req.file.path, appName, packageName, version, url, metadata, tests)
-    res.status(200).send()
+    if(req.file != null) {
+      execute(result.resultsPath, results.apkPath, appName, packageName, version, url, metadata, tests)
+      res.status(200).send()
+    } else {
+      downloadApk(app.url)
+        .then(result => {
+          execute(result.resultsPath, result.apkPath, appName, packageName, version, url, metadata, tests)
+          res.status(200).send()
+        })
+        .catch(error => res.status(500).json({ error: error }))
+    }    
   }
 })
 
+const downloadApk = (url) => {
+  return new Promise((resolve, reject) => {
+    const ts = Date.now()
+    const resultsDir = process.env.UPLOADS_HOME || "./data/uploads"
+    const resultsPath = `${resultsDir}/${ts}`
+    fs.mkdirSync(resultsPath, { recursive: true })
+    const fileName = `${ts}.apk`
+    const output = fs.createWriteStream(`${resultsPath}/${fileName}`)
+    console.log("Going to download on:", `${resultsPath}/${fileName}`)
+    https.get(url, (res) => {
+      console.log('apk download status code:', res.statusCode);
+      res.pipe(output);
+      resolve({ resultsPath: resultsPath, apkPath: `${resultsPath}/${fileName}`})
+    }).on('error', (error) => {
+      reject(error)
+    });
+  })
+}
+
 const execute = (resultsPath, apkPath, appName, packageName, version, url, metadata, tests) => {
+  console.log("Executing tests for:", apkPath)
   const resultsEndpoint = process.env.DELIVER_RESULTS_ENDPOINT || "http://localhost:3000/api/result"
   doTests(resultsPath, apkPath, tests)
     .then(results => {
