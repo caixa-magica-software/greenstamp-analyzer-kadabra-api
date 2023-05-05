@@ -60,12 +60,28 @@ const downloadApk = (url) => {
     console.log("Going to download on:", `${resultsPath}/${fileName}`)
     https.get(url, (res) => {
       console.log('apk download status code:', res.statusCode);
+      if(res.statusCode != 200){
+        reject({ code: res.statusCode, message: "Error during download" });
+        remove(resultsPath)
+      }
       res.pipe(output);
       resolve({ resultsPath: resultsPath, apkPath: `${resultsPath}/${fileName}`})
     }).on('error', (error) => {
       console.log("Error during downlad:", error)
       reject(error)
     });
+  })
+}
+
+const remove = (resultsPath) => {
+  console.log("remove tests for: " + resultsPath)
+  // delete directory recursively
+  fs.rm(resultsPath, { recursive: true }, err => {
+    if (err) {
+      throw err
+    }
+
+    console.log(`${resultsPath} is deleted!`)
   })
 }
 
@@ -117,6 +133,7 @@ const doTests = (resultsPath, apkPath, tests) => {
           console.log("After filtering")
           const filteredTests = testResults.filter((testResult) => testNames.indexOf(testResult.testName) <= 0)
           console.log("Filtered test results:", filteredTests)
+          remove(resultsPath)
           resolve(filteredTests)
         }
       })
