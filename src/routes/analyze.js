@@ -40,6 +40,8 @@ router.post('/', upload.single("binary"), (req, res) => {
     } else {
       downloadApk(url)
         .then(result => {
+          console.log("result.resultsPath: " + result.resultsPath)
+          console.log("result.apkPath: " + result.apkPath)
           execute(result.resultsPath, result.apkPath, appName, packageName, version, url, metadata, tests)
           res.status(200).send()
         })
@@ -106,6 +108,7 @@ const execute = (resultsPath, apkPath, appName, packageName, version, url, metad
 const doTests = (resultsPath, apkPath, tests) => {
   return new Promise((resolve, reject) => {
     const kadabraHome = process.env.KADABRA_HOME
+    console.log(`cd ${resultsPath} && java -jar ${kadabraHome}/kadabra.jar ${kadabraHome}/main.js -p ${apkPath} -WC -APF package! -o output -s -X -C`);
     exec(`cd ${resultsPath} && java -jar ${kadabraHome}/kadabra.jar ${kadabraHome}/main.js -p ${apkPath} -WC -APF package! -o output -s -X -C`, (error, stdout, stderr) => {
       if(error) console.log("error:", error)
       if(stdout) console.log("stdout:", stdout)
