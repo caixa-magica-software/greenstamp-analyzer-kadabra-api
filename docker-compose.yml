@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - 4000:4000
+      - 4000:3000
     environment:
       DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
       KADABRA_HOME: ${KADABRA_HOME}
