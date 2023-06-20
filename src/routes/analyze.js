@@ -65,6 +65,8 @@ const downloadApk = (url) => {
       if(res.statusCode != 200){
         reject({ code: res.statusCode, message: "Error during download" });
         remove(resultsPath)
+      } else {
+        console.log("Download OK statusCode:", res.statusCode)
       }
       res.pipe(output);
       resolve({ resultsPath: resultsPath, apkPath: `${resultsPath}/${fileName}`})
@@ -100,7 +102,11 @@ const execute = (resultsPath, apkPath, appName, packageName, version, url, metad
         results: results
       }
       console.log("Sending test response...", testResponse)
-      axios.put(resultsEndpoint, testResponse)
+      try{
+        axios.put(resultsEndpoint, testResponse)
+      } catch(error){
+        console.log("error:" + error)
+      }
     })
     .catch(error => console.log("ERROR:", error))
 }
