@@ -124,6 +124,7 @@ const doTests = (resultsPath, apkPath, tests) => {
         if (err) reject(err);
         else {
           const results = JSON.parse(data);
+          console.log(results);
           const testResults = tests.map(test => {
             const result = Object.keys(results.detectors).find(detector => detector == test.name)
             return {
