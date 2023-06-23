@@ -12,7 +12,7 @@ services:
     ports:
       - 4000:3000
     environment:
-      DELIVER_RESULTS_ENDPOINT: ${DELIVER_RESULTS_ENDPOINT}
+      DELIVER_RESULTS_ENDPOINT: 'http://51.210.255.156:3000/api/result'
       KADABRA_HOME: ${KADABRA_HOME}
       UPLOADS_HOME: ${UPLOADS_HOME}
     volumes:
