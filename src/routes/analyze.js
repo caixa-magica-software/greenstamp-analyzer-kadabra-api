@@ -131,7 +131,7 @@ const doTests = (resultsPath, apkPath, tests) => {
               name: test.name,
               parameters: test.parameters,
               result: result ? results.detectors[result].length : "NA",
-              unit: "warnings"
+              unit: "detections"
             }
           })
           console.log("Results for:", apkPath)
