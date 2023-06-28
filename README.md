@@ -13,7 +13,8 @@ Declare env variable KADABRA_HOME with the forder of kadabra.
 e.g.
 
 ```
-KADABRA_HOME=/home/campos/git/greenstamp/analyzer-kadabra-api/kadabra
+KADABRA_HOME=/data/greenstamp/analyzer-kadabra-api/kadabra
+UPLOADS_HOME=/data/greenstamp/analyzer-kadabra-api/uploads
 ```
 
 
