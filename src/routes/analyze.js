@@ -137,7 +137,7 @@ const doTests = (resultsPath, apkPath, tests) => {
               parameters: test.parameters,
               result: result ? results.detectors[result].length : "NA",
               unit: "detections",
-              optional: testTime,
+              optional: testTime.toFixed(3),
             }
           })
           console.log("Results for:", apkPath)
