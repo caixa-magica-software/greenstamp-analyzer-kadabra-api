@@ -114,6 +114,8 @@ const execute = (resultsPath, apkPath, appName, packageName, version, url, metad
 const doTests = (resultsPath, apkPath, tests) => {
   return new Promise((resolve, reject) => {
     const kadabraHome = process.env.KADABRA_HOME
+    const timeoutStart = Date.now()
+    var testTime = 0
     console.log(`cd ${resultsPath} && java -jar ${kadabraHome}/kadabra.jar ${kadabraHome}/main.js -p ${apkPath} -WC -APF package! -o output -s -X -C`);
     exec(`cd ${resultsPath} && java -jar ${kadabraHome}/kadabra.jar ${kadabraHome}/main.js -p ${apkPath} -WC -APF package! -o output -s -X -C`, (error, stdout, stderr) => {
       if(error) console.log("error:", error)
@@ -125,13 +127,17 @@ const doTests = (resultsPath, apkPath, tests) => {
         else {
           const results = JSON.parse(data);
           console.log(results);
+          testTime = (Date.now() - timeoutStart) / 1000 / 60
+          console.log("Test time (ms): " + (Date.now() - timeoutStart) ) // Test time in seconds
+          console.log("Test time (minutes): " + testTime) // Test time in minutes
           const testResults = tests.map(test => {
             const result = Object.keys(results.detectors).find(detector => detector == test.name)
             return {
               name: test.name,
               parameters: test.parameters,
               result: result ? results.detectors[result].length : "NA",
-              unit: "detections"
+              unit: "detections",
+              time: testTime,
             }
           })
           console.log("Results for:", apkPath)
